@@ -1,12 +1,12 @@
 {
   "name": "abyss-overlay",
   "productName": "Abyss Overlay",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "The Official Abyss Stats Overlay",
   "homepage": "https://github.com/Chit132/abyss-overlay",
   "main": "main.js",
   "scripts": {
-    "start": "electron .",
+    "start": "npx electron .",
     "build-installer": "electron-builder --win --x64 --ia32",
     "build-installer-dev": "electron-builder --win --x64",
     "build-mac": "electron-builder --mac",
