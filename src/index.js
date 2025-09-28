@@ -32,7 +32,7 @@ const { Cache } = require('./cache.js');
 
 config.delete('players');
 const HY_API = 'https://api.hypixel.net', HY_HEADER = { 'API-Key': config.get('key', '1') };
-const tagsIP = process.env.TAGS_IP, musicIP = process.env.MUSIC_IP, backendIP = process.env.BACKEND_IP, mojang = 'https://api.mojang.com/users/profiles/minecraft/';
+const tagsIP = process.env.TAGS_IP, musicIP = process.env.MUSIC_IP, backendIP = process.env.BACKEND_IP, mojang = "https://api.minecraftservices.com/minecraft/profile/lookup/name/";
 const CACHE_UUID = new Cache();
 const CACHE_STATS = new Cache();
 var players = [], numplayers = 0, goodkey = true, HyThrottle = false, hypixelAPIdown = false, overlayAPIdown = false, backendThrottle = false, overlayBackendDown = false, logpath = '', goodfile = true, currentWindow = '', user = '', useruuid = config.get('uuid', undefined), sent = false, usernick = undefined, winheight = 600, inlobby = true, zoom = 1, gamemode = config.get('settings.gamemode', 0), gmode = config.get('settings.bwgmode', ''), guildlist = false, tagslist = [], guildtag = config.get('settings.gtag', true), startapi = null, starttime = new Date(), music = {session: false, playing: false, looping: false, queue: [], updatetimer: 0, timeratio: [0, 0], songtimer: 0, locked: false, lockwarned: false};
@@ -131,7 +131,7 @@ function verifyUUID(uuid = null) {
     }
 }
 function verifyIGN(ign, $apiElement) {
-    $.ajax({type: 'GET', async: false, url: `https://api.mojang.com/users/profiles/minecraft/${ign}`, headers: HY_HEADER, success: (data) => {
+    $.ajax({type: 'GET', async: false, url: `${mojang}${ign}`, headers: HY_HEADER, success: (data) => {
         user = data.name;
         useruuid = data.id;
         config.set('uuid', useruuid);
