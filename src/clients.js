@@ -45,19 +45,40 @@ class Clients {
     }
 
     #detectLunar(homedir) {
-        let logpath = config.get('lunarlog', -1);
-        if (logpath === -1) {
-            let log_18 = { path: `${homedir}/.lunarclient/offline/1.8/logs/latest.log`, modified: 0 };
-            let log_189 = { path: `${homedir}/.lunarclient/offline/1.8.9/logs/latest.log`, modified: 0 };
-            let log_multiver = { path: `${homedir}/.lunarclient/offline/multiver/logs/latest.log`, modified: 0 };
-            if (fs.existsSync(log_18.path)) log_18.modified = fs.statSync(log_18.path).mtime;
-            if (fs.existsSync(log_189.path)) log_189.modified = fs.statSync(log_189.path).mtime;
-            if (fs.existsSync(log_multiver.path)) log_multiver.modified = fs.statSync(log_multiver.path).mtime;
-            const modifiedLogs = [ log_18, log_189, log_multiver ];
-            modifiedLogs.sort((a, b) => { return b.modified - a.modified });
-            logpath = modifiedLogs[0].path;
+        let lunarLogPath = config.get("lunarlog", -1);
+
+        if (lunarLogPath === -1) {
+            let logPaths = [];
+            let stack = [path.join(homedir, ".lunarclient")];
+
+            while (stack.length > 0) {
+                const currentDirectory = stack.pop();
+                let entries;
+
+                try {
+                    entries = fs.readdirSync(currentDirectory, { withFileTypes: true });
+                } catch (err) {
+                    continue;
+                }
+
+                for (const entry of entries) {
+                    const entryPath = path.join(currentDirectory, entry.name);
+                    if (entry.isDirectory()) stack.push(entryPath);
+                    else if (entry.isFile() && entry.name === "latest.log") logPaths.push(entryPath);
+                }
+            }
+
+            logPaths.sort((a, b) => {
+                const aLastModifiedTime = fs.statSync(a).mtimeMs;
+                const bLastModifiedTime = fs.statSync(b).mtimeMs;
+
+                return bLastModifiedTime - aLastModifiedTime;
+            });
+
+            if (logPaths.length > 0) lunarLogPath = logPaths[0];
         }
-        return logpath;
+
+        return lunarLogPath;
     }
 
     autoDetect() {
