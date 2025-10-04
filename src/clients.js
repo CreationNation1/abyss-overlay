@@ -45,37 +45,44 @@ class Clients {
     }
 
     #detectLunar(homedir) {
-        let lunarLogPath = config.get("lunarlog", -1);
+        let lunarLogPath = config.get("lunarlog", this.paths.vanilla);
 
-        if (lunarLogPath === -1) {
-            let logPaths = [];
-            let stack = [path.join(homedir, ".lunarclient")];
+        if (lunarLogPath != this.paths.vanilla) return lunarLogPath;
+        
+        let mostRecentTime = 0;
+        let stack = [path.join(homedir, ".lunarclient")];
 
-            while (stack.length > 0) {
-                const currentDirectory = stack.pop();
-                let entries;
+        while (stack.length > 0) {
+            const currentDirectory = stack.pop();
+            let entries;
+
+            try {
+                entries = fs.readdirSync(currentDirectory, { withFileTypes: true });
+            } catch (err) {
+                continue;
+            }
+
+            for (const entry of entries) {
+                const entryPath = path.join(currentDirectory, entry.name);
+                
+                if (entry.isDirectory()) {
+                    stack.push(entryPath);
+                    continue;
+                } else if ((entry.isFile() && entry.name != "latest.log") || !entry.isFile()) continue;
+            
+                let modifiedTime = 0;
 
                 try {
-                    entries = fs.readdirSync(currentDirectory, { withFileTypes: true });
+                    modifiedTime = fs.statSync(entryPath).mtimeMs;
                 } catch (err) {
                     continue;
                 }
 
-                for (const entry of entries) {
-                    const entryPath = path.join(currentDirectory, entry.name);
-                    if (entry.isDirectory()) stack.push(entryPath);
-                    else if (entry.isFile() && entry.name === "latest.log") logPaths.push(entryPath);
-                }
+                if (modifiedTime <= mostRecentTime) continue;
+
+                mostRecentTime = modifiedTime;
+                lunarLogPath = entryPath;
             }
-
-            logPaths.sort((a, b) => {
-                const aLastModifiedTime = fs.statSync(a).mtimeMs;
-                const bLastModifiedTime = fs.statSync(b).mtimeMs;
-
-                return bLastModifiedTime - aLastModifiedTime;
-            });
-
-            if (logPaths.length > 0) lunarLogPath = logPaths[0];
         }
 
         return lunarLogPath;
